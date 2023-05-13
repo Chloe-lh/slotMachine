@@ -18,7 +18,6 @@ const prompt = require("prompt-sync")();
         C:3,
         D:2,
     }
-
     //? 1st way to make function
         // function deposit(){
         // }
@@ -39,7 +38,6 @@ const prompt = require("prompt-sync")();
     };
     //const depositAmount = deposit();
     //? let allows variable to be changed
-    let balance = deposit(); 
 // TODO: determine number of lines to bet on
     //? functions have to be defined BEFORE you use them
     const getNumOfLines = () => {
@@ -53,7 +51,6 @@ const prompt = require("prompt-sync")();
             }
         } 
     };
-    const numOfLines = getNumOfLines();
 // TODO:  collect a bet amount 
     const getBet = (balance,numOfLines) =>{
         while(true){
@@ -66,19 +63,103 @@ const prompt = require("prompt-sync")();
             }
         }
     };
-    const bet = getBet(balance,numOfLines);
 // TODO:  Spin slot machine
     const spin = () =>{
         const symbols = [];
         for( const[symbol,count] of Object.entries(SYMBOLS_COUNT)){
             for(let i=0;i<count;i++){
                 //adds 2 As into array
-                symbols.push(symbols);
+                symbols.push(symbol);
             }
         }
+        // each array represents a collumn
+        const reels = [];
+        for(let i=0;i<COLS;i++){
+            reels.push([]);
+            //? copies symbols available for each reel into another array
+            const reelSymbols = [...symbols];
+            for(let j=0;j<ROWS;j++){
+                const randomIndex = Math.floor(Math.random()*reelSymbols.length);
+                const selectedSymbol = reelSymbols[randomIndex];
+                reels[i].push(selectedSymbol);
+                //remove symbol so it cannot be selected again (i , num) num = remove number of elements
+                reelSymbols.splice(randomIndex,1);
 
+            }
+        }
+        return reels;
+    };  
+// TODO: check if user won 
+    // vertical collumns : [A D C],[D D A],[B C B] -> transpose into rows
+    // A D B
+    // D D C
+    // C A B
+    const transpose = (reels) =>{
+        const rows = []
+        for(let i=0; i<ROWS; i++){
+            rows.push([]);
+            for(let j=0; j<COLS; j++){
+                rows[i].push(reels[j][i]);
+            }
+        }
+        return rows;
+    };
+  const printRows = (rows) =>{
+    for(const row of rows){ //gives array
+        let rowString = "";
+            for(const[i,symbol] of row.entries() ){
+                rowString += symbol +"|";
+                if(i!= row.length-1){
+                    rowString += " | ";
+                }
+            }
+        console.log(rowString);
+    }
+    } ;
+
+
+// TODO: give user winnings or take bet
+const getWinnings = (rows, bet, lines) =>{
+    let winnings=0;
+    for(let row=0;row<lines;row++){
+        const symbols = rows[row];
+        let allSame = true;
+        for(const symbol of symbols){
+            if(symbol!=symbols[0]){
+                allSame = false;
+                break;
+            }
+        }
+        if (allSame){
+            winnings+= bet*SYMBOLS_VALUE[symbols[0]];
+        }
+    }
+    return winnings;
     };
 
-// TODO: check if user won 
-// TODO: give user winnings or take bet
-// TODO:  play again 
+// TODO:  play again
+const game = ()=>{
+    let balance = deposit(); 
+    while(true){
+        console.log("you have a balance of $"+balance);
+        const numOfLines = getNumOfLines();
+        const bet = getBet(balance,numOfLines);
+        balance -= bet*numOfLines;
+        const reels = spin();
+        const rows = transpose(reels); 
+        printRows(rows);
+        const winnings = getWinnings(rows, bet, numOfLines);
+        console.log("You won $"+winnings.toString());
+        const play = prompt("Play again? (y/n): ");
+        balance += winnings;
+        if(balance<=0){
+            console.log("Youre out of money. game over");
+            break;
+        }
+        const playA = prompt("play again? (y/n)");
+        if(playA!="y"){
+            break;
+        }
+    }
+}; 
+game();
